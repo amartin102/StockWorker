@@ -78,7 +78,7 @@ namespace Testing.Controller
         {
             // Arrange
             var ingredient = new IngredientDto { IdIngredient = 1,  Quantity = 5 };
-            _mockupdateStockService.Setup(s => s.UpdateStockAsync(ingredient)).ReturnsAsync(true);
+            //_mockupdateStockService.Setup(s => s.UpdateStockAsync(ingredient)).ReturnsAsync(true);
 
             // Act
             //var result = await _stockController.UpdateStock(ingredient);
@@ -93,7 +93,7 @@ namespace Testing.Controller
         {
             // Arrange
             var ingredient = new IngredientDto { IdIngredient = 2,Quantity = 0 };
-            _mockupdateStockService.Setup(s => s.UpdateStockAsync(ingredient)).ReturnsAsync(false);
+           // _mockupdateStockService.Setup(s => s.UpdateStockAsync(ingredient)).ReturnsAsync(false);
 
             // Act
             //var result = await _stockController.UpdateStock(ingredient);
@@ -108,8 +108,8 @@ namespace Testing.Controller
         {
             // Arrange
             var ingredient = new IngredientDto { IdIngredient = 3, Quantity = 10 };
-            _mockupdateStockService.Setup(s => s.UpdateStockAsync(ingredient))
-                        .ThrowsAsync(new Exception("Database failure"));
+            //_mockupdateStockService.Setup(s => s.UpdateStockAsync(ingredient))
+            //            .ThrowsAsync(new Exception("Database failure"));
 
             // Act
             //var result = await _stockController.UpdateStock(ingredient);

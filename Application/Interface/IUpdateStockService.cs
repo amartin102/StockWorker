@@ -10,6 +10,6 @@ namespace Application.Interface
 {
     public interface IUpdateStockService
     {
-        Task<bool> UpdateStockAsync(IngredientDto ingredient);
+        Task<bool> UpdateStockAsync(List<IngredientDto> ingredients);
     }
 }

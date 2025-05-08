@@ -26,9 +26,9 @@ namespace Repository.Repositories
             return result;
         }
 
-        public async Task<bool> UpdateStockAsync(Ingredient ingredient)
+        public async Task<bool> UpdateStockAllAsync(List<Ingredient> ingredients)
         {
-            var result = await UpdateAsync(ingredient);
+            var result = await UpdateAsync(ingredients);
             return result;
         }
     }

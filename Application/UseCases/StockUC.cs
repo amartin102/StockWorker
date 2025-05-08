@@ -30,9 +30,9 @@ namespace Application.UseCases
             return recipe;
         }
 
-        public async Task<bool> UpdateStockAsync(IngredientDto ingredient)
+        public async Task<bool> UpdateStockAsync(List<IngredientDto> ingredients)
         {
-            var recipe = await _updateStockService.UpdateStockAsync(ingredient);
+            var recipe = await _updateStockService.UpdateStockAsync(ingredients);
             return recipe;
         }
 

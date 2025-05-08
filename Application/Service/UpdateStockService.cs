@@ -14,24 +14,28 @@ namespace Application.Service
             _ingredientRepository = ingredientRepository;
         }
 
-        public async Task<bool> UpdateStockAsync(IngredientDto ingredient)
+        public async Task<bool> UpdateStockAsync(List<IngredientDto> ingredients)
         {
             using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                //1. Consultar el ingrediente por id
-                var ingredientModel = await _ingredientRepository.GetIngredientById(ingredient.IdIngredient);
-                    ingredientModel.Quantity = ingredient.Quantity;
-
-                //2. actualizamos el stock
-                var result = await _ingredientRepository.UpdateStockAsync(ingredientModel);
-
-                if (result)
+                List<Ingredient> ingredientList = new List<Ingredient>();
+                foreach (var item in ingredients)
                 {
-                    scope.Complete();
-                    return true;
+                    //1. Consultar el ingrediente por id
+                    var ingredientModel = await _ingredientRepository.GetIngredientById(item.IdIngredient);
+                    ingredientModel.Quantity = (ingredientModel.Quantity - item.Quantity);
+
+                    ingredientList.Add(ingredientModel);
                 }
 
+                //2. actualizamos el stock
+                var result = await _ingredientRepository.UpdateStockAllAsync(ingredientList);
+                if (!result)
+                {
+                    scope.Dispose();
+                    return false;
+                }
                 scope.Dispose();
                 return false;
             }

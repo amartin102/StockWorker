@@ -44,7 +44,7 @@ namespace Worker.Workers
             {
                 var eventConsumer = scope.ServiceProvider.GetRequiredService<IEventConsumer>();
 
-                Task.Run(() => eventConsumer.Consume(topicName), cancellationToken);
+                var result = eventConsumer.Consume<bool>(topicName, null);
 
             }
             return Task.CompletedTask;

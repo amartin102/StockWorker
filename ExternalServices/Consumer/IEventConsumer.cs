@@ -8,6 +8,6 @@ namespace ExternalServices.Consumer
 {
     public interface IEventConsumer
     {
-        void Consume(string topic);
+        Task<T?> Consume<T>(string topic, string key);
     }
 }

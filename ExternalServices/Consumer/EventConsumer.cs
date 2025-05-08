@@ -38,7 +38,7 @@ namespace ExternalServices.Consumer
             _kafkaSettings = kafkaSettings;
         }
 
-        public async void Consume(string topic)
+        public async Task<T?> Consume<T>(string topic, string? key)
         {
             using var consumer = new ConsumerBuilder<string, string>(_config)
                        .SetKeyDeserializer(Deserializers.Utf8)
@@ -60,8 +60,10 @@ namespace ExternalServices.Consumer
 
                 if (topic == "CheckAvailabilityRequest_Topic")
                     eventObject = JsonSerializer.Deserialize<CheckAvailabilityRequestEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
-                else if (topic == "CreatedOrderEvent_Topic")
+                else if (topic == "CreatedOrder_Topic")
                     eventObject = JsonSerializer.Deserialize<CreatedOrderEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
+                else if (topic == "UpdateStockRequest_Topic")
+                    eventObject = JsonSerializer.Deserialize<UpdateStockRequestEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
 
                 if (eventObject is null)
                 {
@@ -107,14 +109,40 @@ namespace ExternalServices.Consumer
                         await _producerBus.SendAsync(_kafkaSettings.Value.UpdateStockRequestTopic, stockMesagge);
 
                         _logger.LogInformation($"Respuesta enviada, orderId = {checkAvailabilityEvent.OrderId} actualizar inventario = {availableRecipes}");
+                        consumer.Commit(consumeResult);
+                        _logger.LogInformation($"Mensaje procesado: {consumeResult.Message.Value}");
+
+                        return JsonSerializer.Deserialize<T>(consumeResult.Message.Value);
                     }
                 }
                 else if (eventObject is CreatedOrderEvent createdOrderEvent)
                 {
-                    using (var scope = _serviceProvider.CreateScope())
+                    consumer.Commit(consumeResult);
+                    _logger.LogInformation($"Mensaje procesado: {consumeResult.Message.Value}");
+                    return JsonSerializer.Deserialize<T>(consumeResult.Message.Value);
+                }
+                else if (eventObject is UpdateStockRequestEvent updateStockRequestEvent)
+                {
+                    if (!string.IsNullOrEmpty(key) && key == updateStockRequestEvent.StockDto?.FirstOrDefault().OrderId.ToString())
                     {
-                        var stockService = scope.ServiceProvider.GetRequiredService<IStockUC>();
-                        //await stockService.UpdateStockAsync(createdOrderEvent);
+                        using (var scope = _serviceProvider.CreateScope())
+                        {
+                            var stockService = scope.ServiceProvider.GetRequiredService<IStockUC>();
+                            // Actualizar el stock
+
+                            var updateTasks = updateStockRequestEvent.StockDto.SelectMany(dto => dto.Ingredients).ToList();
+                            await stockService.UpdateStockAsync(updateTasks);
+
+                            // Update the instantiation of UpdatedStockResponseEvent to include the required "guid" parameter.
+                            var stockMesagge = new UpdatedStockResponseEvent(Guid.NewGuid(),"Updated Stock",updateStockRequestEvent.StockDto.FirstOrDefault().OrderId);
+                            await _producerBus.SendAsync(_kafkaSettings.Value.UpdatedStockResponseTopic, stockMesagge);
+                            _logger.LogInformation($"Inventario actualizado = {stockMesagge}!!!");
+                            
+                            consumer.Commit(consumeResult);
+                            _logger.LogInformation($"Mensaje procesado: {consumeResult.Message.Value}, Fin proceso!!!");
+
+
+                        }
                     }
                 }
 

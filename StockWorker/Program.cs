@@ -54,6 +54,7 @@ namespace Worker
                 services.Configure<ConsumerConfig>(configuration.GetSection(nameof(ConsumerConfig)));
 
                 services.AddHostedService<CheckAvailabilityWorker>();
+                services.AddHostedService<UpdateStockWorker>();
 
             });
 

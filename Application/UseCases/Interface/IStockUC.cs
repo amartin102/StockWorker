@@ -11,6 +11,6 @@ namespace Application.UseCases.Interface
     public interface IStockUC
     {
         Task<StockDto> GetRecipeById(int recipeId, int orderId);
-        Task<bool> UpdateStockAsync(IngredientDto ingredient);
+        Task<bool> UpdateStockAsync(List<IngredientDto> ingredients);
     }
 }

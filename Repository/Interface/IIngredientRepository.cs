@@ -8,6 +8,6 @@ namespace Repository.Interface
 
         Task<List<Ingredient>> GetAllIngredients();
 
-        Task<bool> UpdateStockAsync(Ingredient ingredient);
+        Task<bool> UpdateStockAllAsync(List<Ingredient> ingredients);
     }
 }

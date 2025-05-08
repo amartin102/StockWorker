@@ -1,4 +1,5 @@
 using Confluent.Kafka;
+using ExternalServices.Common;
 using ExternalServices.Consumer;
 using Microsoft.Extensions.Options;
 
@@ -36,7 +37,7 @@ namespace Worker.Workers
         }
 
 
-        public Task StartAsync(CancellationToken cancellationToken, string topicName)
+        public async Task StartAsync(CancellationToken cancellationToken, string topicName)
         {
             _logger.LogInformation("Consumer working..");
 
@@ -44,10 +45,17 @@ namespace Worker.Workers
             {
                 var eventConsumer = scope.ServiceProvider.GetRequiredService<IEventConsumer>();
 
-                Task.Run(() => eventConsumer.Consume(topicName), cancellationToken);
+                var resultCreatedOrder = await eventConsumer.Consume<CreatedOrderEvent>(topicName, null);
+              
+                if(resultCreatedOrder is null)
+                {
+                    throw new ArgumentNullException("no se pudo procesar el mensaje");
+                }
+
+                topicName = "UpdateStockRequest_Topic";
+                await eventConsumer.Consume<UpdateStockRequestEvent>(topicName, resultCreatedOrder.OrderId.ToString());
 
             }
-            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
