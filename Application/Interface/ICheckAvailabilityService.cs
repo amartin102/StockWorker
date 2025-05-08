@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Application.Dto;
+using Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace Application.Interface
 {
     public interface ICheckAvailabilityService
     {
-        Task<bool> GetRecipeById(int recipeId);
+        Task<StockDto> GetRecipeById(int recipeId, int orderId);
     }
 }

@@ -16,6 +16,7 @@ using Domain.Models;
 using Application.Interface;
 using ExternalServices.KafkaConfig;
 using static Confluent.Kafka.ConfigPropertyNames;
+using Application.Dto;
 
 namespace ExternalServices.Consumer
 {
@@ -49,17 +50,18 @@ namespace ExternalServices.Consumer
             while (true)
             {
                 var consumeResult = consumer.Consume(TimeSpan.FromSeconds(3));
-                if (consumeResult is null) {
+                if (consumeResult is null || consumeResult.Message is null)
+                {
                     _logger.LogInformation($"No hay mensajes a leer");
                     continue;
                 }
-               
-                if (consumeResult.Message is null) continue;
 
-                var options = new JsonSerializerOptions {};
+                var eventObject = new object();
 
-                var eventObject = (topic == "CheckAvailabilityRequest_Topic" ? JsonSerializer.Deserialize<CheckAvailabilityRequestEvent>(consumeResult.Message.Value, options) 
-                                               : null);
+                if (topic == "CheckAvailabilityRequest_Topic")
+                    eventObject = JsonSerializer.Deserialize<CheckAvailabilityRequestEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
+                else if (topic == "CreatedOrderEvent_Topic")
+                    eventObject = JsonSerializer.Deserialize<CreatedOrderEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
 
                 if (eventObject is null)
                 {
@@ -68,38 +70,57 @@ namespace ExternalServices.Consumer
 
                 _logger.LogInformation($"Mensaje recibido {consumeResult.Message.Value}");
 
+                if (eventObject is CheckAvailabilityRequestEvent checkAvailabilityEvent)
+                {
                     List<int> recipes = new List<int>();
-                    bool availableRecipes = false;
+                    var stockList = new List<StockDto>();
+                    var stockDto = new StockDto();
+                    bool availableRecipes = true;
 
-                    recipes.AddRange(eventObject.Recipes);
-
+                    recipes.AddRange(checkAvailabilityEvent.Recipes);
 
                     foreach (var recipeId in recipes)
                     {
                         using (var scope = _serviceProvider.CreateScope())
                         {
-                            var stockService = scope.ServiceProvider.GetRequiredService<IStockUC>();
-                            availableRecipes =  await stockService.GetRecipeById(recipeId);
+                            stockDto = await scope.ServiceProvider.GetRequiredService<IStockUC>().GetRecipeById(recipeId, checkAvailabilityEvent.OrderId);
 
-                            if (!availableRecipes)
+                            if (!stockDto.Available)
                             {
                                 availableRecipes = false;
                                 break;
                             }
-                    }
+
+                            stockList.Add(stockDto);
+                        }
                     }
 
-                //Publicar la respuesta con CorrelationId
-                var eventMessagge = new CheckAvailabilityResponseEvent(eventObject.Guid, eventObject.OrderId, availableRecipes);
-                await _producerBus.SendAsync(_kafkaSettings.Value.CheckAvailabilityResponseTopic, eventMessagge);
+                    // Publicar la respuesta con CorrelationId
+                    var eventMessagge = new CheckAvailabilityResponseEvent(checkAvailabilityEvent.Guid, checkAvailabilityEvent.OrderId, availableRecipes);
+                    await _producerBus.SendAsync(_kafkaSettings.Value.CheckAvailabilityResponseTopic, eventMessagge);
 
-                _logger.LogInformation($"Respuesta enviada, orderId = {eventObject.OrderId} con disponibilidad = {availableRecipes}");
-                               
+                    _logger.LogInformation($"Respuesta enviada, orderId = {checkAvailabilityEvent.OrderId} con disponibilidad = {availableRecipes}");
+
+                    if (availableRecipes)
+                    {
+                        var stockMesagge = new UpdateStockRequestEvent() { StockDto = stockList };
+                        await _producerBus.SendAsync(_kafkaSettings.Value.UpdateStockRequestTopic, stockMesagge);
+
+                        _logger.LogInformation($"Respuesta enviada, orderId = {checkAvailabilityEvent.OrderId} actualizar inventario = {availableRecipes}");
+                    }
+                }
+                else if (eventObject is CreatedOrderEvent createdOrderEvent)
+                {
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        var stockService = scope.ServiceProvider.GetRequiredService<IStockUC>();
+                        //await stockService.UpdateStockAsync(createdOrderEvent);
+                    }
+                }
+
                 consumer.Commit(consumeResult);
                 _logger.LogInformation($"Mensaje procesado: {consumeResult.Message.Value}");
-
             }
-
         }
     }
 }

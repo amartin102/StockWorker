@@ -201,5 +201,38 @@ namespace Repository
             }
         }
 
+        public async Task<bool> UpdateAsync(List<TEntity> entities)
+        {
+            try
+            {
+                if (entities != null && entities.Any())
+                {
+                    foreach (var entity in entities)
+                    {
+                        var idProperty = entity.GetType().GetProperty("IdIngredient");
+                        if (idProperty == null) continue;
+
+                        var id = idProperty.GetValue(entity);
+                        var _entity = await _context.Set<TEntity>().FindAsync(id);
+
+                        if (_entity != null)
+                        {
+                            _context.Entry(_entity).CurrentValues.SetValues(entity);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // log exception si es necesario
+                return false;
+                // throw; // Esto nunca se ejecuta porque el return viene antes
+            }
+        }
+
     }
 }

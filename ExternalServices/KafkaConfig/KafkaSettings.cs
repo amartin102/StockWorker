@@ -12,5 +12,6 @@ namespace ExternalServices.KafkaConfig
         public string Port { get; set; } = string.Empty;
         public string CheckAvailabilityRequestTopic { get; set; } = string.Empty;
         public string CheckAvailabilityResponseTopic { get; set; } = string.Empty;
+        public string UpdateStockRequestTopic { get; set; } = string.Empty;
     }
 }

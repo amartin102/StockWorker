@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Dto;
+using Domain.Models;
 
 namespace Application.UseCases.Interface
 {
     public interface IStockUC
     {
-        Task<bool> GetRecipeById(int recipeId);
+        Task<StockDto> GetRecipeById(int recipeId, int orderId);
+        Task<bool> UpdateStockAsync(IngredientDto ingredient);
     }
 }

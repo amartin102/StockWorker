@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Dto;
 using Application.Interface;
 using Application.UseCases.Interface;
+using Domain.Models;
 using Microsoft.Extensions.Hosting;
 
 namespace Application.UseCases
@@ -21,11 +23,18 @@ namespace Application.UseCases
             _updateStockService = updateStockService;
         }
 
-        public async Task<bool> GetRecipeById(int recipeId)
+        public async Task<StockDto> GetRecipeById(int recipeId, int orderId)
         {
-            var recipe = await _checkAvailabilityService.GetRecipeById(recipeId);
+            var recipe = await _checkAvailabilityService.GetRecipeById(recipeId, orderId);
 
             return recipe;
         }
+
+        public async Task<bool> UpdateStockAsync(IngredientDto ingredient)
+        {
+            var recipe = await _updateStockService.UpdateStockAsync(ingredient);
+            return recipe;
+        }
+
     }
 }

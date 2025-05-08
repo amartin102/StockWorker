@@ -4,13 +4,13 @@ using Microsoft.Extensions.Options;
 
 namespace Worker.Workers
 {
-    public class CheckAvailabilityWorker : BackgroundService
+    public class UpdateStockWorker : BackgroundService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<CheckAvailabilityWorker> _logger;
         private readonly IServiceProvider _serviceProvider;
 
-        public CheckAvailabilityWorker(IConfiguration configuration, ILogger<CheckAvailabilityWorker> logger, IServiceProvider serviceProvider)
+        public UpdateStockWorker(IConfiguration configuration, ILogger<CheckAvailabilityWorker> logger, IServiceProvider serviceProvider)
         {
             _configuration = configuration;
             _logger = logger;
@@ -26,8 +26,8 @@ namespace Worker.Workers
             {
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    var topicName = "CheckAvailabilityRequest_Topic";
-                    _logger.LogInformation("CheckAvailabilityWorker running at: {time}", DateTimeOffset.Now);
+                    var topicName = "CreatedOrder_Topic";
+                    _logger.LogInformation("UpdateStockWorker running at: {time}", DateTimeOffset.Now);
                     await StartAsync(stoppingToken, topicName);
 
                 }

@@ -35,7 +35,13 @@ namespace Repository.Coconseconsentext
         {
            base.OnModelCreating(modelBuilder);
 
-           modelBuilder.Entity<RecipeIngredient>()
+            modelBuilder.Entity<Recipe>()
+              .HasMany(e => e.RecipeIngredients)
+             .WithOne(ri => ri.Recipe)
+             .HasForeignKey(ri => ri.IdRecipe)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecipeIngredient>()
           .HasOne(d => d.Recipe) 
           .WithMany(p => p.RecipeIngredients) 
           .HasForeignKey(d => d.IdRecipe) 

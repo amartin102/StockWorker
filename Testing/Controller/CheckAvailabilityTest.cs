@@ -32,7 +32,7 @@ namespace Testing.Controller
         {
             // Arrange
             int recipeId = 1;
-            _mockCheckAvailabilityService.Setup(s => s.GetRecipeById(recipeId)).ReturnsAsync(true);
+            //_mockCheckAvailabilityService.Setup(s => s.GetRecipeById(recipeId, 1)).ReturnsAsync(true);
 
             // Act
             //var result = await _stockController.CheckAvailability(recipeId);
@@ -47,7 +47,7 @@ namespace Testing.Controller
         {
             // Arrange
             int recipeId = 2;
-            _mockCheckAvailabilityService.Setup(s => s.GetRecipeById(recipeId)).ReturnsAsync(false);
+            //_mockCheckAvailabilityService.Setup(s => s.GetRecipeById(recipeId, 1)).ReturnsAsync(false);
 
             // Act
             //var result = await _stockController.CheckAvailability(recipeId);
@@ -62,7 +62,7 @@ namespace Testing.Controller
         {
             // Arrange
             int recipeId = 3;
-            _mockCheckAvailabilityService.Setup(s => s.GetRecipeById(recipeId)).ThrowsAsync(new Exception("Something went wrong"));
+            _mockCheckAvailabilityService.Setup(s => s.GetRecipeById(recipeId, 1)).ThrowsAsync(new Exception("Something went wrong"));
 
             // Act
             //var result = await _stockController.CheckAvailability(recipeId);

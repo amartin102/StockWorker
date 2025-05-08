@@ -1,4 +1,5 @@
-﻿using Application.Interface;
+﻿using Application.Dto;
+using Application.Interface;
 using Domain.Models;
 using Repository.Interface;
 
@@ -15,8 +16,12 @@ namespace Application.Service
             _ingredientRepository = ingredientRepository;
         }
 
-        public async Task<bool> GetRecipeById(int recipeId)
+        public async Task<StockDto> GetRecipeById(int recipeId, int orderId)
         {            
+            var stockDto = new StockDto() { OrderId = orderId, RecipeId = recipeId, Available = false };
+            List<Ingredient> ingredients = new List<Ingredient>();
+
+
             var recipe = await _recipeRepository.GetRecipeById(recipeId);
 
             if (recipe != null)
@@ -30,14 +35,19 @@ namespace Application.Service
                     var ingredientStock = allIngredients.Result.FirstOrDefault(i => i.IdIngredient == ingredient.IdIngredient);
                     if (ingredientStock != null && ingredient.Quantity > ingredientStock.Quantity)
                     {
-                        return false; //hay suficiente stock
+                        //no hay suficiente stock                       
+                        return stockDto;
+                    }
+                    else {
+                        stockDto.Available = true;
+                        stockDto.Ingredients.Add(new IngredientDto() { IdIngredient = ingredientStock.IdIngredient, Quantity = ingredient.Quantity });
                     }
                 }
 
-                return true;
+                return stockDto;
             }
 
-            return false;
+            return stockDto;
         }
     }
 }
