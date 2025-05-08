@@ -31,7 +31,7 @@ namespace Worker.Workers
                     await StartAsync(stoppingToken, topicName);
 
                 }
-                await Task.Delay(10000, stoppingToken);
+                await Task.Delay(3000, stoppingToken);
             }
         }
 
