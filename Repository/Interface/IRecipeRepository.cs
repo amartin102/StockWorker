@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using System.Diagnostics.CodeAnalysis;
+using Domain.Models;
 
 namespace Repository.Interface
 {

@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Confluent.Kafka;
 using ExternalServices.Consumer;
 using Microsoft.Extensions.Options;
 
 namespace Worker.Workers
 {
+    [ExcludeFromCodeCoverage]
     public class CheckAvailabilityWorker : BackgroundService
     {
         private readonly IConfiguration _configuration;

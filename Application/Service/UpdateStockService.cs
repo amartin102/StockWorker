@@ -36,8 +36,8 @@ namespace Application.Service
                     scope.Dispose();
                     return false;
                 }
-                scope.Dispose();
-                return false;
+                scope.Complete();
+                return true;
             }
             catch (Exception ex)
             {
