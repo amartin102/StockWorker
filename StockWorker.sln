@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35818.85
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Application", "2. Application", "{58C69BB4-7243-4E9F-8A5F-AD8669F70AA0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{58C69BB4-7243-4E9F-8A5F-AD8669F70AA0}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Infraestructure", "3. Infraestructure", "{EFDF1704-63E2-46CE-8B9F-8EF22928A6CA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infraestructure", "Infraestructure", "{EFDF1704-63E2-46CE-8B9F-8EF22928A6CA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. UnitTest", "4. UnitTest", "{F1CE421D-E502-4C27-8EA4-75315F2B32BB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTest", "UnitTest", "{F1CE421D-E502-4C27-8EA4-75315F2B32BB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repository", "Repository\Repository.csproj", "{73E0D4B4-B39E-4C54-B901-D63C9342F508}"
 EndProject
@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalServices", "Externa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{995A9025-B97B-484D-9FD2-54CD4686605C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. Worker", "5. Worker", "{1C77D381-01E8-48B4-8686-A8E250EB0B8A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StockWorker", "StockWorker", "{1C77D381-01E8-48B4-8686-A8E250EB0B8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worker", "StockWorker\Worker.csproj", "{0F0C375D-A2DF-4264-B5F0-2D72A3D344FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockWorker", "StockWorker\StockWorker.csproj", "{0F0C375D-A2DF-4264-B5F0-2D72A3D344FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
