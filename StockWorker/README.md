@@ -4,19 +4,7 @@ Este proyecto contiene los pasos para compilar y ejecutar una aplicación .NET e
 
 ## 🚀 Pasos para publicar y ejecutar
 
-### 1. Publicar la aplicación para Linux
-
-Ejecuta el siguiente comando para publicar la aplicación .NET en un formato adecuado para contenedor Linux:
-
-```bash
-dotnet publish -c Release -r linux-x64 --self-contained false -o publish
-```
-
-Esto genera la salida publicada en la carpeta `publish`, lista para ser usada en un contenedor Linux.
-
----
-
-### 2. Construir la imagen Docker
+### 1. Construir la imagen Docker
 
 Una vez publicada la aplicación, crea la imagen Docker con el siguiente comando:
 
@@ -28,12 +16,12 @@ Este comando crea una imagen Docker llamada `stockworker-image` a partir del `Do
 
 ---
 
-### 3. Ejecutar el contenedor
+### 2. Ejecutar el contenedor
 
 Finalmente, ejecuta el contenedor Docker con el siguiente comando:
 
 ```bash
-docker run -d -p 8081:81 --name stockworker-container stockworker-image
+docker run -d -p 8081:8081 --name stockworker-container stockworker-image
 ```
 
 Este comando:
@@ -47,7 +35,7 @@ Este comando:
 ## 📁 Estructura esperada
 
 ```
-/StockWorker/
+/StockWorkerSn/
 ├── publish/
 │   └── (archivos publicados con dotnet publish)
 ├── Dockerfile

@@ -49,7 +49,6 @@ namespace Worker
 
                 var provider = services.BuildServiceProvider();
                 var test = provider.GetService<IEventConsumer>();
-                Console.WriteLine(test != null ? "ICheckAvailabilityService registrado correctamente" : "ICheckAvailabilityService no está registrado");
 
                 services.Configure<ConsumerConfig>(configuration.GetSection(nameof(ConsumerConfig)));
 
