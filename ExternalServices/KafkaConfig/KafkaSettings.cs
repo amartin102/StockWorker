@@ -8,8 +8,7 @@ namespace ExternalServices.KafkaConfig
 {
     public class KafkaSettings
     {
-        public string Hostname { get; set; } = string.Empty;
-        public string Port { get; set; } = string.Empty;
+        public string BootstrapServers { get; set; } = string.Empty;
         public string CheckAvailabilityRequestTopic { get; set; } = string.Empty;
         public string CheckAvailabilityResponseTopic { get; set; } = string.Empty;
         public string UpdateStockRequestTopic { get; set; } = string.Empty;

@@ -26,7 +26,7 @@ namespace ExternalServices.KafkaConfig
         {
             var config = new ProducerConfig
             {
-                BootstrapServers = $"{_kafkaSettings.Hostname}:{_kafkaSettings.Port}"
+                BootstrapServers = _kafkaSettings.BootstrapServers
             };
 
             using var producer = new ProducerBuilder<string, string>(config)
