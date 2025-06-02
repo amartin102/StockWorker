@@ -26,7 +26,13 @@ namespace ExternalServices.KafkaConfig
         {
             var config = new ProducerConfig
             {
-                BootstrapServers = _kafkaSettings.BootstrapServers
+                BootstrapServers = _kafkaSettings.BootstrapServers,
+                SecurityProtocol = Enum.TryParse(_kafkaSettings.SecurityProtocol, out SecurityProtocol securityProtocol) ? securityProtocol : SecurityProtocol.Plaintext,
+                SaslMechanism = Enum.TryParse(_kafkaSettings.SaslMechanism, out SaslMechanism saslMechanism) ? saslMechanism : SaslMechanism.Plain,
+                SaslUsername = _kafkaSettings.SaslUsername,
+                SaslPassword = _kafkaSettings.SaslPassword,
+                SslEndpointIdentificationAlgorithm = _kafkaSettings.sslendpointidentificationalgorithm.ToString() == "None" ? SslEndpointIdentificationAlgorithm.None : SslEndpointIdentificationAlgorithm.Https,
+
             };
 
             using var producer = new ProducerBuilder<string, string>(config)
