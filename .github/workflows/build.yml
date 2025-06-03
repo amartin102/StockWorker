@@ -4,44 +4,71 @@ on:
   push:
     branches:
       - master
-
+  pull_request: # Es una buena práctica incluir pull_request para análisis en PRs
+    branches:
+      - master
 
 jobs:
   build:
     name: Build and analyze
     runs-on: windows-latest
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0 # Necesario para análisis profundos en SonarQube
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available.
-      - name: Cache SonarQube packages
+          distribution: 'zulu' # Puedes usar 'temurin' o 'microsoft' si prefieres
+
+      - name: Setup .NET SDK # Agregado: Es crucial para que 'dotnet build' funcione
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.x' # Asegúrate de que esta versión coincida con la de tu proyecto .NET
+
+      - name: Cache SonarQube packages # Caché para paquetes de SonarQube (si aplica)
         uses: actions/cache@v4
         with:
-          path: ~\.sonar\cache
+          path: ~\.sonar\cache # Ruta de caché para el SonarScanner
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-      - name: Cache SonarQube scanner
+
+      - name: Cache SonarQube scanner # Caché para el ejecutable del SonarScanner
         id: cache-sonar-scanner
         uses: actions/cache@v4
         with:
           path: .\.sonar\scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
-      - name: Install SonarQube scanner
+
+      - name: Install SonarQube scanner # Instala el scanner si no está en caché
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
-      - name: Build and analyze
+
+      # Paso de Build y Análisis combinado
+      - name: SonarQube Analysis (Begin, Build, End)
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"amartin102_StockWorker_77a340ae-9f9e-4c9f-9849-2f3764172457" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
-          dotnet build
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          # --- Fase BEGIN ---
+          # Usa el operador '&' para ejecutar el comando externo de forma robusta
+          & ".\.sonar\scanner\dotnet-sonarscanner" begin `
+            /k:"amartin102_StockWorker_77a340ae-9f9e-4c9f-9849-2f3764172457" `
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
+            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
+            /d:sonar.scanner.skipProvisioning=true # Opcional: para evitar la descarga repetida de Java
+
+          # --- Fase BUILD ---
+          # Asegúrate de que tu solución o proyecto esté en la raíz del repositorio o ajusta la ruta.
+          # Si tu proyecto StockWorker tiene un archivo de solución, usa ese. Si es un solo proyecto, puedes usar 'dotnet build StockWorker.csproj'
+          dotnet build # Esto construirá la solución en el directorio actual
+
+          # --- Fase END ---
+          # Usa el operador '&' de nuevo para el comando 'end'
+          & ".\.sonar\scanner\dotnet-sonarscanner" end `
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
