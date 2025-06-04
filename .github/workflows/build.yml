@@ -1,74 +1,115 @@
-name: Build
+name: Build and Analyze .NET
 
 on:
   push:
     branches:
-      - master
-  pull_request: # Es una buena práctica incluir pull_request para análisis en PRs
+      - master # O la rama principal de tu proyecto
+  pull_request:
     branches:
-      - master
+      - master # O la rama principal de tu proyecto
 
 jobs:
   build:
     name: Build and analyze
-    runs-on: windows-latest
+    runs-on: windows-latest # Perfecto para entornos .NET con PowerShell
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necesario para análisis profundos en SonarQube
+          fetch-depth: 0 # Necesario para Codecov si quieres datos históricos de cobertura
 
-      - name: Set up JDK 17
+      - name: Set up JDK 17 # Este paso no es necesario para Codecov/Coverlet, solo para SonarQube. Puedes eliminarlo si no lo necesitas para nada más.
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Puedes usar 'temurin' o 'microsoft' si prefieres
+          distribution: 'zulu'
 
-      - name: Setup .NET SDK # Agregado: Es crucial para que 'dotnet build' funcione
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '6.x' # Asegúrate de que esta versión coincida con la de tu proyecto .NET
+          dotnet-version: '6.x' # Asegúrate que esta versión coincida con la de tu proyecto .NET
 
-      - name: Cache SonarQube packages # Caché para paquetes de SonarQube (si aplica)
-        uses: actions/cache@v4
-        with:
-          path: ~\.sonar\cache # Ruta de caché para el SonarScanner
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+      # --- INICIO: PASOS DE SONARQUBE (ELIMINADOS) ---
+      # - name: Cache SonarQube scanner
+      #   id: cache-sonar-scanner
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: .\.sonar\scanner
+      #     key: ${{ runner.os }}-sonar
+      #     restore-keys: ${{ runner.os }}-sonar
 
-      - name: Cache SonarQube scanner # Caché para el ejecutable del SonarScanner
-        id: cache-sonar-scanner
-        uses: actions/cache@v4
-        with:
-          path: .\.sonar\scanner
-          key: ${{ runner.os }}-sonar-scanner
-          restore-keys: ${{ runner.os }}-sonar-scanner
+      # - name: Install SonarQube scanner
+      #   if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+      #   shell: powershell
+      #   run: |
+      #     New-Item -Path .\.sonar\scanner -ItemType Directory
+      #     dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
-      - name: Install SonarQube scanner # Instala el scanner si no está en caché
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+      # - name: SonarQube Begin Analysis (ELIMINADO)
+      #   shell: powershell
+      #   run: |
+      #     # ... tu lógica de SonarQube begin ...
+
+      # --- FIN: PASOS DE SONARQUBE (ELIMINADOS) ---
+
+      - name: Build Project
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+          dotnet build StockWorkerSn.sln
 
-      # Paso de Build y Análisis combinado
-      - name: SonarQube Analysis (Begin, Build, End)
+      - name: Run Tests with Coverage
         shell: powershell
         run: |
-          # --- Fase BEGIN ---
-          # Usa el operador '&' para ejecutar el comando externo de forma robusta
-          & ".\.sonar\scanner\dotnet-sonarscanner" begin `
-            /k:"amartin102_StockWorker_77a340ae-9f9e-4c9f-9849-2f3764172457" `
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
-            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
-            /d:sonar.scanner.skipProvisioning=true # Opcional: para evitar la descarga repetida de Java
+          # Asegúrate de que coverlet.collector esté agregado a tu proyecto de pruebas:
+          # dotnet add Testing/Testing.csproj package coverlet.collector
+          
+          # Creamos el directorio si no existe para asegurar la ruta de salida
+          New-Item -Path ".sonarqube/temp/TestResults" -ItemType Directory -Force
+          
+          # Ejecuta las pruebas y genera el archivo de cobertura.
+          # Usamos las mismas rutas de salida que tenías para SonarQube.
+          dotnet test Testing/Testing.csproj `
+            --no-build `
+            --collect:"XPlat Code Coverage" `
+            --results-directory ".sonarqube/temp/TestResults/" `
+            --logger "trx;LogFileName=test_results.trx" `
+            /p:CoverletOutputFormat="cobertura" `
+            /p:CoverletOutput=".sonarqube/temp/cobertura.xml"
+          
+          # Verificación y listado de archivos (útil para depuración)
+          $coverageFile = Get-ChildItem -Path ".sonarqube/temp/TestResults/" -Recurse -Filter "coverage.cobertura.xml" | Select-Object -ExpandProperty FullName -First 1
+          
+          if ($coverageFile) {
+            Write-Host "Found coverage report at: $coverageFile"
+            Write-Host "--- Content of $coverageFile ---"
+            Get-Content $coverageFile | Out-String | Write-Host
+            Write-Host "--- End of content ---"
+            
+            Write-Host "Listing contents of .sonarqube/temp/TestResults/ directory:"
+            Get-ChildItem -Path ".sonarqube/temp/TestResults/" -Recurse -Force | Format-List FullName, Length
+            Write-Host "Listing contents of .sonarqube/temp/ directory:"
+            Get-ChildItem -Path ".sonarqube/temp/" -Recurse -Force | Format-List FullName, Length
+          } else {
+            Write-Host "ERROR: Coverage report (coverage.cobertura.xml) not found after tests. Exiting with error."
+            exit 1
+          }
 
-          # --- Fase BUILD ---
-          # Asegúrate de que tu solución o proyecto esté en la raíz del repositorio o ajusta la ruta.
-          # Si tu proyecto StockWorker tiene un archivo de solución, usa ese. Si es un solo proyecto, puedes usar 'dotnet build StockWorker.csproj'
-          dotnet build # Esto construirá la solución en el directorio actual
+      # --- NUEVO PASO PARA CODECOV ---
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          # Aquí especificamos la ruta donde Coverlet generó el archivo de cobertura
+          files: ./.sonarqube/temp/cobertura.xml 
+          fail_ci_if_error: true # Opcional: hará que el build de CI falle si hay un problema al subir a Codecov
+          token: ${{ secrets.CODECOV_TOKEN }} # SOLO para repositorios privados. Crea este secreto en GitHub.
+          verbose: true # Para obtener logs detallados en caso de problemas
+          # flags: unit-tests # Opcional: puedes añadir flags para categorizar los reportes en Codecov
 
-          # --- Fase END ---
-          # Usa el operador '&' de nuevo para el comando 'end'
-          & ".\.sonar\scanner\dotnet-sonarscanner" end `
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      # --- FIN: NUEVO PASO PARA CODECOV ---
+
+      # --- INICIO: PASOS DE SONARQUBE (ELIMINADOS) ---
+      # - name: SonarQube End Analysis (ELIMINADO)
+      #   shell: powershell
+      #   run: |
+      #     # ... tu lógica de SonarQube end ...
+      # --- FIN: PASOS DE SONARQUBE (ELIMINADOS) ---
