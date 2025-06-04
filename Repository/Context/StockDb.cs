@@ -1,10 +1,12 @@
-﻿using Domain.Models;
+﻿using System.Diagnostics.CodeAnalysis;
+using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 
 namespace Repository.Coconseconsentext
 {
+    [ExcludeFromCodeCoverage]
     public class StockDb : DbContext
     {
         public string DefaultConnection { get; set; }
