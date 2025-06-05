@@ -9,10 +9,12 @@ using Confluent.Kafka;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+//using static Confluent.Kafka.ConfigPropertyNames;
+
 
 namespace ExternalServices.KafkaConfig
 {
-    public class Producer: IProducer
+    public class Producer : IProducer
     {
         private readonly KafkaSettings _kafkaSettings;
         private readonly ILogger<Producer> _logger;
@@ -22,16 +24,19 @@ namespace ExternalServices.KafkaConfig
             _kafkaSettings = kafkaSettings.Value;
             _logger = logger;
         }
+
+
+
         public async Task SendAsync<T>(string topic, T customerEvent)
         {
             var config = new ProducerConfig
             {
-                BootstrapServers = _kafkaSettings.BootstrapServers,
-                SecurityProtocol = Enum.TryParse(_kafkaSettings.SecurityProtocol, out SecurityProtocol securityProtocol) ? securityProtocol : SecurityProtocol.Plaintext,
-                SaslMechanism = Enum.TryParse(_kafkaSettings.SaslMechanism, out SaslMechanism saslMechanism) ? saslMechanism : SaslMechanism.Plain,
-                SaslUsername = _kafkaSettings.SaslUsername,
-                SaslPassword = _kafkaSettings.SaslPassword,
-                SslEndpointIdentificationAlgorithm = _kafkaSettings.sslendpointidentificationalgorithm.ToString() == "None" ? SslEndpointIdentificationAlgorithm.None : SslEndpointIdentificationAlgorithm.Https,
+                BootstrapServers = _kafkaSettings.BootstrapServers
+                //SecurityProtocol = Enum.TryParse(_kafkaSettings.SecurityProtocol, out SecurityProtocol securityProtocol) ? securityProtocol : SecurityProtocol.Plaintext,
+                //SaslMechanism = Enum.TryParse(_kafkaSettings.SaslMechanism, out SaslMechanism saslMechanism) ? saslMechanism : SaslMechanism.Plain,
+                //SaslUsername = _kafkaSettings.SaslUsername,
+                //SaslPassword = _kafkaSettings.SaslPassword,
+                //SslEndpointIdentificationAlgorithm = _kafkaSettings.sslendpointidentificationalgorithm.ToString() == "None" ? SslEndpointIdentificationAlgorithm.None : SslEndpointIdentificationAlgorithm.Https,
 
             };
 
@@ -56,6 +61,9 @@ namespace ExternalServices.KafkaConfig
             por la siguiente razon: {deliveryStatus.Message}");
             }
             _logger.LogInformation("Event sent!");
+
         }
+
     }
+
 }

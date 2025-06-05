@@ -49,10 +49,10 @@ namespace ExternalServices.Consumer
 
             while (true)
             {
-                var consumeResult = consumer.Consume(TimeSpan.FromSeconds(3));
+                var consumeResult = consumer.Consume(TimeSpan.FromSeconds(30));
                 if (consumeResult is null || consumeResult.Message is null)
                 {
-                    _logger.LogInformation($"No hay mensajes a leer");
+                   // _logger.LogInformation($"No hay mensajes a leer");
                     continue;
                 }
 
@@ -62,7 +62,7 @@ namespace ExternalServices.Consumer
                     eventObject = JsonSerializer.Deserialize<CheckAvailabilityRequestEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
                 else if (topic == "CreatedOrder_Topic")
                     eventObject = JsonSerializer.Deserialize<CreatedOrderEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
-                else if (topic == "UpdateStockRequest_Topic")
+                else if (topic == "StockRequest_Topic")
                     eventObject = JsonSerializer.Deserialize<UpdateStockRequestEvent>(consumeResult.Message.Value, new JsonSerializerOptions { });
 
                 if (eventObject is null)
@@ -118,11 +118,11 @@ namespace ExternalServices.Consumer
                 else if (eventObject is CreatedOrderEvent createdOrderEvent)
                 {
                     consumer.Commit(consumeResult);
-                    _logger.LogInformation($"Mensaje procesado: {consumeResult.Message.Value}");
+                    _logger.LogInformation($"Orden Creada Consumida: {consumeResult.Message.Value}");
                     return JsonSerializer.Deserialize<T>(consumeResult.Message.Value);
                 }
                 else if (eventObject is UpdateStockRequestEvent updateStockRequestEvent)
-                {
+                  {
                     if (!string.IsNullOrEmpty(key) && key == updateStockRequestEvent.StockDto?.FirstOrDefault().OrderId.ToString())
                     {
                         using (var scope = _serviceProvider.CreateScope())
@@ -144,7 +144,7 @@ namespace ExternalServices.Consumer
 
                         }
                     }
-                }
+                  }
 
                 consumer.Commit(consumeResult);
                 _logger.LogInformation($"Mensaje procesado: {consumeResult.Message.Value}");

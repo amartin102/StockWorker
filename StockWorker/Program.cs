@@ -47,10 +47,10 @@ namespace Worker
                 services.AddTransient<IEventConsumer, EventConsumer>();
                 services.AddTransient<IProducer, Producer>();
 
-                /*var provider = services.BuildServiceProvider();
+                var provider = services.BuildServiceProvider();
                 var test = provider.GetService<IEventConsumer>();
                 Console.WriteLine(test != null ? "ICheckAvailabilityService registrado correctamente" : "ICheckAvailabilityService no está registrado");
-                */
+
                 services.Configure<ConsumerConfig>(configuration.GetSection(nameof(ConsumerConfig)));
 
                 services.AddHostedService<CheckAvailabilityWorker>();

@@ -34,30 +34,44 @@ namespace Worker.Workers
                     await StartAsync(stoppingToken, topicName);
 
                 }
-                await Task.Delay(3000, stoppingToken);
+                await Task.Delay(5000, stoppingToken);
             }
         }
 
 
         public async Task StartAsync(CancellationToken cancellationToken, string topicName)
         {
-            _logger.LogInformation("Consumer working..");
+            _logger.LogInformation("Consumer UpdateStockWorkerworking..");
 
-            using (IServiceScope scope = _serviceProvider.CreateScope())
-            {
-                var eventConsumer = scope.ServiceProvider.GetRequiredService<IEventConsumer>();
-
-                var resultCreatedOrder = await eventConsumer.Consume<CreatedOrderEvent>(topicName, null);
-              
-                if(resultCreatedOrder is null)
+            try
+            {                
+                using (IServiceScope scope = _serviceProvider.CreateScope())
                 {
-                    throw new ArgumentNullException("no se pudo procesar el mensaje");
+                    var eventConsumer = scope.ServiceProvider.GetRequiredService<IEventConsumer>();
+
+                    var resultCreatedOrder = await eventConsumer.Consume<CreatedOrderEvent>(topicName, null);
+
+                    if (resultCreatedOrder is null)
+                    {
+                        throw new ArgumentNullException("no se pudo procesar el mensaje");
+                    }
+
+                    using (IServiceScope scope2 = _serviceProvider.CreateScope())
+                    {
+                        eventConsumer = scope2.ServiceProvider.GetRequiredService<IEventConsumer>();
+
+                        topicName = "StockRequest_Topic";
+                        var resultUpdateStock = eventConsumer.Consume<UpdateStockRequestEvent>(topicName, resultCreatedOrder.OrderId.ToString());
+                    }                    
                 }
 
-                topicName = "UpdateStockRequest_Topic";
-                await eventConsumer.Consume<UpdateStockRequestEvent>(topicName, resultCreatedOrder.OrderId.ToString());
-
+               
             }
+            catch (Exception ex )
+            {
+                _logger.LogInformation("Error UpdateStockWorker working..");
+                throw;
+            }            
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
